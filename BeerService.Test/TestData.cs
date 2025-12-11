@@ -35,11 +35,13 @@ public static class Generators
         var brands = AlphanumericString();
         var strengths = ArbMap.Default.ArbFor<double>().Generator;
         var ids = ArbMap.Default.ArbFor<PositiveInt>().Generator;
-        return from name in names
-            from brand in brands
-            from strength in strengths
-            from id in ids
-            select new BeerEntity { Name = name, Brand = brand, Strength = strength, Id = id.Get };
+        // applicative way of constructing the type that is usually superb to a monadic chain using LINQ
+        return names.Zip(brands).Zip(strengths).Zip(ids).Select(it =>
+        {
+            // unroll the tuple craziness
+            var (((name, brand), strength), id) = it;
+            return new BeerEntity { Id = id.Get, Name = name, Brand = brand, Strength = strength };
+        });
     }
 
     public static Gen<BeerPayload> CreateBeer() =>
