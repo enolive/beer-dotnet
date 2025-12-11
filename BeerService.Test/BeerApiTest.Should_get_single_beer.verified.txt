@@ -1,0 +1,6 @@
+﻿{
+  id: 4711,
+  name: Schanze Rot,
+  brand: Schanzenbräu,
+  strength: 5
+}

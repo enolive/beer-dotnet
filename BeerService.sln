@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeerService", "BeerService\BeerService.csproj", "{37FCE7A4-70EE-424F-B966-082A382177A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeerService.Test", "BeerService.Test\BeerService.Test.csproj", "{90EDC740-1A26-47FE-87BB-E21EA25EB7F1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "http-requests", "http-requests", "{45685D73-1103-4433-B57F-D233C5B23382}"
+	ProjectSection(SolutionItems) = preProject
+		BeerService.http = BeerService.http
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{37FCE7A4-70EE-424F-B966-082A382177A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37FCE7A4-70EE-424F-B966-082A382177A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37FCE7A4-70EE-424F-B966-082A382177A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37FCE7A4-70EE-424F-B966-082A382177A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90EDC740-1A26-47FE-87BB-E21EA25EB7F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90EDC740-1A26-47FE-87BB-E21EA25EB7F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90EDC740-1A26-47FE-87BB-E21EA25EB7F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90EDC740-1A26-47FE-87BB-E21EA25EB7F1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

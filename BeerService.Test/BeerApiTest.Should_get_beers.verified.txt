@@ -1,0 +1,14 @@
+﻿[
+  {
+    id: 815,
+    name: Wasser,
+    brand: Nestle,
+    strength: 0
+  },
+  {
+    id: 4711,
+    name: Schanze Rot,
+    brand: Schanzenbräu,
+    strength: 5
+  }
+]
