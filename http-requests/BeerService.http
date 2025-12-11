@@ -1,0 +1,36 @@
+@BeerService_HostAddress = http://localhost:5172
+
+###
+
+GET {{BeerService_HostAddress}}/beers
+
+###
+
+GET {{BeerService_HostAddress}}/beers/2
+
+###
+
+POST {{BeerService_HostAddress}}/beers
+Content-Type: application/json
+
+{
+  "name": "Schanze Rot",
+  "brand": "Schanzenbräu",
+  "strength": 5.0
+}
+
+###
+
+PUT {{BeerService_HostAddress}}/beers/2
+Content-Type: application/json
+
+{
+  "name": "Schanze Rot",
+  "brand": "Schanzenbräu",
+  "strength": 4.9
+}
+
+###
+
+DELETE {{BeerService_HostAddress}}/beers/1
+
