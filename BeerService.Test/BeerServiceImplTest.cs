@@ -41,7 +41,7 @@ public class BeerServiceImplTest : IAsyncLifetime
         await _postgres.StopAsync();
     }
 
-    [Property(MaxTest = 1, Arbitrary = [typeof(Arbitraries)])]
+    [Property(MaxTest = 1)]
     public async Task Should_create_beer(BeerPayload createBeer)
     {
         var result = await _sut.Create(createBeer);
@@ -53,7 +53,7 @@ public class BeerServiceImplTest : IAsyncLifetime
         found.Should().BeEquivalentTo(result);
     }
 
-    [Property(MaxTest = 1, Arbitrary = [typeof(Arbitraries)])]
+    [Property(MaxTest = 1)]
     public async Task Should_delete_beer(BeerPayload createBeer)
     {
         var created = await _sut.Create(createBeer);
@@ -64,7 +64,7 @@ public class BeerServiceImplTest : IAsyncLifetime
         found.Should().BeNull();
     }
 
-    [Property(MaxTest = 1, Arbitrary = [typeof(Arbitraries)])]
+    [Property(MaxTest = 1)]
     public async Task Should_update_beer(BeerPayload createBeer, BeerPayload updateBeer)
     {
         var created = await _sut.Create(createBeer);
