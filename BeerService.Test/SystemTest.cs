@@ -47,6 +47,6 @@ public class SystemTest :
 
         readResponse.EnsureSuccessStatusCode();
         var beers = await readResponse.Content.ReadAsStringAsync();
-        await Verify(beers);
+        await VerifyJson(beers);
     }
 }

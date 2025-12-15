@@ -8,7 +8,7 @@ namespace BeerService;
 
 public interface IBeerService
 {
-    IEnumerable<BeerEntity> FindAll();
+    IAsyncEnumerable<BeerEntity> FindAll();
     Task<BeerEntity> Create(BeerPayload beer);
     Task Delete(int id);
     Task<BeerEntity?> FindById(int id);
@@ -17,7 +17,7 @@ public interface IBeerService
 
 public class BeerServiceImpl(AppDbContext dbContext) : IBeerService
 {
-    public IEnumerable<BeerEntity> FindAll() => dbContext.Beers.ToList();
+    public IAsyncEnumerable<BeerEntity> FindAll() => dbContext.Beers.AsAsyncEnumerable();
 
     public async Task<BeerEntity> Create(BeerPayload beer)
     {
@@ -25,7 +25,7 @@ public class BeerServiceImpl(AppDbContext dbContext) : IBeerService
         {
             Details = new BeerDetails { Brand = beer.Brand, Name = beer.Name, Strength = beer.Strength },
         };
-        dbContext.Beers.Add(entity);
+        await dbContext.Beers.AddAsync(entity);
         await dbContext.SaveChangesAsync();
         return entity;
     }

@@ -23,7 +23,8 @@ public class BeerServiceImplTest(PostgresFixture postgres) : IClassFixture<Postg
 
         result.Id.Should().BeGreaterThan(0);
         result.Should().BeEquivalentTo(createBeer, x => x.ExcludingMissingMembers());
-        _sut.FindAll().Should().Contain(result);
+        var beers = await _sut.FindAll().ToListAsync();
+        beers.Should().Contain(result);
         var found = await _sut.FindById(result.Id);
         found.Should().BeEquivalentTo(result);
     }

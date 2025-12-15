@@ -39,7 +39,7 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
                 Id = 4711, Details = new BeerDetails { Brand = "Schanzenbräu", Name = "Schanze Rot", Strength = 5.0 }
             },
         ];
-        _mockedService.Setup(x => x.FindAll()).Returns(beers);
+        _mockedService.Setup(x => x.FindAll()).Returns(beers.ToAsyncEnumerable());
 
         var response = await _client.GetAsync("/beers");
 
