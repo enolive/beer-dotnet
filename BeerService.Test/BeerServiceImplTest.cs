@@ -4,45 +4,17 @@ using AwesomeAssertions;
 using FsCheck;
 using FsCheck.Xunit;
 using JetBrains.Annotations;
-using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 
 #endregion
 
 namespace BeerService.Test;
 
 [TestSubject(typeof(BeerServiceImpl))]
-public class BeerServiceImplTest : IAsyncLifetime
+public class BeerServiceImplTest(PostgresFixture postgres) : IClassFixture<PostgresFixture>
 {
     private const int MaxIterations = 10;
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-        .WithDatabase("testdb")
-        .WithUsername("testuser")
-        .WithPassword("testpass")
-        .Build();
-
-    private AppDbContext _context = default!;
-    private BeerServiceImpl _sut = default!;
-
-    public async Task InitializeAsync()
-    {
-        await _postgres.StartAsync();
-
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_postgres.GetConnectionString())
-            .Options;
-
-        _context = new AppDbContext(options);
-        await _context.Database.EnsureCreatedAsync(); // Create tables
-        _sut = new BeerServiceImpl(_context);
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _context.DisposeAsync();
-        await _postgres.StopAsync();
-    }
+    private readonly BeerServiceImpl _sut = new(postgres.DbContext);
 
     [Property(MaxTest = MaxIterations)]
     public async Task Should_create_beer(BeerPayload createBeer)

@@ -23,9 +23,7 @@ public class BeerServiceImpl(AppDbContext dbContext) : IBeerService
     {
         var entity = new BeerEntity
         {
-            Name = beer.Name,
-            Brand = beer.Brand,
-            Strength = beer.Strength
+            Details = new BeerDetails { Brand = beer.Brand, Name = beer.Name, Strength = beer.Strength },
         };
         dbContext.Beers.Add(entity);
         await dbContext.SaveChangesAsync();
@@ -41,9 +39,9 @@ public class BeerServiceImpl(AppDbContext dbContext) : IBeerService
         var found = await FindById(id);
         if (found == null) return null;
 
-        found.Name = toUpdate.Name;
-        found.Brand = toUpdate.Brand;
-        found.Strength = toUpdate.Strength;
+        found.Details.Name = toUpdate.Name;
+        found.Details.Brand = toUpdate.Brand;
+        found.Details.Strength = toUpdate.Strength;
         await dbContext.SaveChangesAsync();
         return found;
     }

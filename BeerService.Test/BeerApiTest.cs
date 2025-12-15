@@ -33,8 +33,11 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
     {
         List<BeerEntity> beers =
         [
-            new() { Id = 0815, Brand = "Nestle", Name = "Wasser", Strength = 0.0 },
-            new() { Id = 4711, Brand = "Schanzenbräu", Name = "Schanze Rot", Strength = 5.0 },
+            new() { Id = 0815, Details = new BeerDetails { Brand = "Nestle", Name = "Wasser", Strength = 0.0 } },
+            new()
+            {
+                Id = 4711, Details = new BeerDetails { Brand = "Schanzenbräu", Name = "Schanze Rot", Strength = 5.0 }
+            },
         ];
         _mockedService.Setup(x => x.FindAll()).Returns(beers);
 
@@ -51,9 +54,12 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
         var beer = new BeerEntity
         {
             Id = 4711,
-            Brand = "Schanzenbräu",
-            Name = "Schanze Rot",
-            Strength = 5.0
+            Details = new BeerDetails
+            {
+                Brand = "Schanzenbräu",
+                Name = "Schanze Rot",
+                Strength = 5.0
+            }
         };
         _mockedService.Setup(x => x.FindById(beer.Id)).ReturnsAsync(beer);
 
@@ -90,7 +96,10 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
             """;
         var toCreate = new BeerPayload("Schanze Rot", "Schanzenbräu", 5.0);
         var created = new BeerEntity
-            { Id = 4711, Brand = toCreate.Brand, Name = toCreate.Name, Strength = toCreate.Strength };
+        {
+            Id = 4711,
+            Details = new BeerDetails { Brand = toCreate.Brand, Name = toCreate.Name, Strength = toCreate.Strength }
+        };
         _mockedService.Setup(x => x.Create(toCreate)).ReturnsAsync(created);
 
         var response = await _client.PostAsync(
@@ -131,7 +140,10 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
             """;
         var toUpdate = new BeerPayload("Schanze Rot", "Schanzenbräu", 5.0);
         var created = new BeerEntity
-            { Id = id, Brand = toUpdate.Brand, Name = toUpdate.Name, Strength = toUpdate.Strength };
+        {
+            Id = id,
+            Details = new BeerDetails { Brand = toUpdate.Brand, Name = toUpdate.Name, Strength = toUpdate.Strength }
+        };
         _mockedService.Setup(x => x.Update(id, toUpdate)).ReturnsAsync(created);
 
         var response = await _client.PutAsync(
