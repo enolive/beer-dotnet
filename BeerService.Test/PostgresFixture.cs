@@ -11,7 +11,7 @@ public class PostgresFixture : IAsyncLifetime
         .WithPassword("testpass")
         .Build();
 
-    public AppDbContext DbContext { get; private set; }
+    public AppDbContext DbContext { get; private set; } = default!; // initialized on async lifetime
 
     public async Task InitializeAsync()
     {
