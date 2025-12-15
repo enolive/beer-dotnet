@@ -14,7 +14,7 @@ public static class Arbitraries
     public static Arbitrary<BeerEntity> BeerEntity() => Generators.BeerEntity().ToArbitrary();
 
     [UsedImplicitly]
-    public static Arbitrary<BeerPayload> CreateBeer() => Generators.CreateBeer().ToArbitrary();
+    public static Arbitrary<BeerPayload> BeerPayload() => Generators.BeerPayload().ToArbitrary();
 }
 
 public static class Generators
@@ -44,6 +44,6 @@ public static class Generators
         });
     }
 
-    public static Gen<BeerPayload> CreateBeer() =>
+    public static Gen<BeerPayload> BeerPayload() =>
         BeerEntity().Select(x => new BeerPayload(x.Name, x.Brand, x.Strength));
 }

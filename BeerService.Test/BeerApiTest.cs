@@ -2,7 +2,7 @@
 
 using System.Net;
 using System.Net.Http.Headers;
-using FluentAssertions;
+using AwesomeAssertions;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;

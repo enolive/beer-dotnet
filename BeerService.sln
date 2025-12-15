@@ -4,11 +4,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeerService", "BeerService\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeerService.Test", "BeerService.Test\BeerService.Test.csproj", "{90EDC740-1A26-47FE-87BB-E21EA25EB7F1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "http-requests", "http-requests", "{45685D73-1103-4433-B57F-D233C5B23382}"
-	ProjectSection(SolutionItems) = preProject
-		BeerService.http = BeerService.http
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
