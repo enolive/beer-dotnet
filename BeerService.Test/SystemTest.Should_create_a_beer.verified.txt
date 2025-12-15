@@ -1,0 +1,1 @@
+﻿[{"id":1,"details":{"name":"Schanze Rot","brand":"Schanzenbräu","strength":5}}]
