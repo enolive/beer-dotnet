@@ -17,9 +17,6 @@ public class BeerEntity
 
 public class BeerDetails
 {
-    public static BeerDetails FromPayload(BeerPayload payload) => new()
-        { Brand = payload.Brand, Name = payload.Name, Strength = payload.Strength };
-
     public required string Name { get; set; }
     public required string Brand { get; set; }
     public required double Strength { get; set; }
