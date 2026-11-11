@@ -1,0 +1,11 @@
+root = true
+
+[*.cs]
+# complain about missed CancellationTokens
+dotnet_diagnostic.MA0032.severity = warning
+dotnet_diagnostic.MA0040.severity = warning
+
+# complains about one class per file which is BS
+dotnet_diagnostic.MA0048.severity = none
+# complains about ConfigureAwait on every await which is mainly for legacy UI projects
+dotnet_diagnostic.MA0004.severity = none

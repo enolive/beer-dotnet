@@ -10,18 +10,22 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BeerService.Test;
 
-public class SystemTest :
-    IClassFixture<WebApplicationFactory<Program>>,
-    IClassFixture<PostgresFixture>
+public class SystemTest
+    : IClassFixture<WebApplicationFactory<Program>>,
+        IClassFixture<PostgresFixture>
 {
-    private readonly HttpClient _client;
+    private readonly HttpClient client;
 
     public SystemTest(WebApplicationFactory<Program> factory, PostgresFixture postgres)
     {
-        _client = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
-        {
-            services.AddSingleton(postgres.DbContext);
-        })).CreateClient();
+        client = factory
+            .WithWebHostBuilder(builder =>
+                builder.ConfigureServices(services =>
+                {
+                    services.AddSingleton(postgres.DbContext);
+                })
+            )
+            .CreateClient();
     }
 
     [Fact]
@@ -36,17 +40,18 @@ public class SystemTest :
              }
             """;
 
-        var createdResponse = await _client.PostAsync(
+        var createdResponse = await client.PostAsync(
             "/beers",
-            new StringContent(json, new MediaTypeHeaderValue("application/json"))
+            new StringContent(json, new MediaTypeHeaderValue("application/json")),
+            TestContext.Current.CancellationToken
         );
 
         createdResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var readResponse = await _client.GetAsync("/beers");
+        var readResponse = await client.GetAsync("/beers", TestContext.Current.CancellationToken);
 
         readResponse.EnsureSuccessStatusCode();
-        var beers = await readResponse.Content.ReadAsStringAsync();
+        var beers = await readResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         await VerifyJson(beers);
     }
 }

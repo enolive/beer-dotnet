@@ -5,29 +5,28 @@ namespace BeerService.Test;
 
 public class PostgresFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
+    private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder("postgres:latest")
         .WithDatabase("testdb")
         .WithUsername("testuser")
         .WithPassword("testpass")
         .Build();
 
-    public AppDbContext DbContext { get; private set; } = default!; // initialized on async lifetime
+    public AppDbContext DbContext { get; private set; } = null!; // initialized on async lifetime
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
-        await _postgres.StartAsync();
-
+        var ct = TestContext.Current.CancellationToken;
+        await postgres.StartAsync(ct);
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_postgres.GetConnectionString())
+            .UseNpgsql(postgres.GetConnectionString())
             .Options;
-
         DbContext = new AppDbContext(options);
-        await DbContext.Database.EnsureCreatedAsync(); // Create tables
+        await DbContext.Database.MigrateAsync(ct); // Create tables
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbContext.DisposeAsync();
-        await _postgres.StopAsync();
+        await postgres.StopAsync(CancellationToken.None);
     }
 }

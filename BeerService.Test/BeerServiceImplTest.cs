@@ -2,60 +2,110 @@
 
 using AwesomeAssertions;
 using FsCheck;
+using FsCheck.Fluent;
 using FsCheck.Xunit;
 using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
 
 #endregion
 
 namespace BeerService.Test;
 
-[TestSubject(typeof(BeerServiceImpl))]
-public class BeerServiceImplTest(PostgresFixture postgres) : IClassFixture<PostgresFixture>
+public class BeerServiceImplTest(PostgresFixture postgres)
+    : IClassFixture<PostgresFixture>,
+        IAsyncLifetime
 {
-    private const int MaxIterations = 10;
+    private readonly BeerServiceImpl sut = new(postgres.DbContext);
+    private readonly CancellationToken ct = TestContext.Current.CancellationToken;
 
-    private readonly BeerServiceImpl _sut = new(postgres.DbContext);
+    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
-    [Property(MaxTest = MaxIterations)]
-    public async Task Should_create_beer(BeerPayload createBeer)
+    public async ValueTask DisposeAsync()
     {
-        var result = await _sut.Create(createBeer);
-
-        result.Id.Should().BeGreaterThan(0);
-        result.Should().BeEquivalentTo(createBeer, x => x.ExcludingMissingMembers());
-        var beers = await _sut.FindAll().ToListAsync();
-        beers.Should().Contain(result);
-        var found = await _sut.FindById(result.Id);
-        found.Should().BeEquivalentTo(result);
+        await postgres.DbContext.Beers.ExecuteDeleteAsync(ct);
     }
 
-    [Property(MaxTest = MaxIterations)]
-    public async Task Should_delete_beer(BeerPayload createBeer)
+    public class Examples(PostgresFixture postgres) : BeerServiceImplTest(postgres)
     {
-        var created = await _sut.Create(createBeer);
+        [Fact]
+        public async Task Should_create_beer()
+        {
+            var createBeer = new BeerPayload("Wasser", "Nestle", 0.0);
+            var result = await sut.Create(createBeer, ct);
 
-        await _sut.Delete(created.Id);
-
-        var found = await _sut.FindById(created.Id);
-        found.Should().BeNull();
+            result.Id.Should().BeGreaterThan(0);
+            result.Should().BeEquivalentTo(createBeer, x => x.ExcludingMissingMembers());
+            var beers = await sut.FindAll().ToListAsync(ct);
+            beers.Should().Contain(result);
+            var found = await sut.FindById(result.Id, ct);
+            found.Should().BeEquivalentTo(result);
+        }
     }
 
-    [Property(MaxTest = MaxIterations)]
-    public async Task Should_update_beer(BeerPayload createBeer, BeerPayload updateBeer)
+    [Properties(MaxTest = 10, Arbitrary = [typeof(Arbs)])]
+    public class Properties(PostgresFixture postgres) : BeerServiceImplTest(postgres)
     {
-        var created = await _sut.Create(createBeer);
+        [Property]
+        public async Task Should_create_beer(BeerPayload createBeer)
+        {
+            var result = await sut.Create(createBeer, ct);
 
-        await _sut.Update(created.Id, updateBeer);
+            result.Id.Should().BeGreaterThan(0);
+            result.Should().BeEquivalentTo(createBeer, x => x.ExcludingMissingMembers());
+            var beers = await sut.FindAll().ToListAsync(ct);
+            beers.Should().Contain(result);
+            var found = await sut.FindById(result.Id, ct);
+            found.Should().BeEquivalentTo(result);
+        }
 
-        var found = await _sut.FindById(created.Id);
-        found.Should().BeEquivalentTo(updateBeer, x => x.ExcludingMissingMembers());
+        [Property]
+        public async Task Should_delete_beer(BeerPayload createBeer)
+        {
+            var created = await sut.Create(createBeer, ct);
+
+            await sut.Delete(created.Id, ct);
+
+            var found = await sut.FindById(created.Id, ct);
+            found.Should().BeNull();
+        }
+
+        [Property]
+        public async Task Should_update_beer(BeerPayload createBeer, BeerPayload updateBeer)
+        {
+            var created = await sut.Create(createBeer, ct);
+
+            await sut.Update(created.Id, updateBeer, ct);
+
+            var found = await sut.FindById(created.Id, ct);
+            found.Should().BeEquivalentTo(updateBeer, x => x.ExcludingMissingMembers());
+        }
+
+        [Property]
+        public async Task Should_not_update_missing_beer(PositiveInt id, BeerPayload updateBeer)
+        {
+            // make sure that the entry does not exist from a previous run
+            await sut.Delete(id.Get, ct);
+
+            var updated = await sut.Update(id.Get, updateBeer, ct);
+
+            updated.Should().BeNull();
+        }
     }
 
-    [Property(MaxTest = MaxIterations)]
-    public async Task Should_not_update_missing_beer(PositiveInt id, BeerPayload updateBeer)
+    public static class Arbs
     {
-        var updated = await _sut.Update(id.Get, updateBeer);
+        private static readonly IArbMap Map = ArbMap.Default;
 
-        updated.Should().BeNull();
+        [UsedImplicitly]
+        public static Arbitrary<BeerPayload> ValidPayload() =>
+            (
+                from name in String()
+                from brand in String()
+                from strength in Map.GeneratorFor<NormalFloat>()
+                select new BeerPayload(name, brand, strength.Get)
+            ).ToArbitrary();
+
+        private static Gen<string> String() =>
+            ArbMap.Default.GeneratorFor<string>().Where(s => s is not null && !s.Contains('\0'));
     }
 }

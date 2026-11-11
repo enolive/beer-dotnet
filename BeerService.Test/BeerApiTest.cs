@@ -15,36 +15,57 @@ namespace BeerService.Test;
 [TestSubject(typeof(BeerApi))]
 public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
 {
+    private readonly CancellationToken ct = TestContext.Current.CancellationToken;
+
     public BeerApiTest(WebApplicationFactory<Program> factory)
     {
-        _mockedService = new Mock<IBeerService>();
-        var client = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services => { services.AddSingleton(_mockedService.Object); });
-        }).CreateClient();
-        _client = client;
+        mockedService = new Mock<IBeerService>();
+        client = factory
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    services.AddSingleton(mockedService.Object);
+                });
+            })
+            .CreateClient();
     }
 
-    private readonly Mock<IBeerService> _mockedService;
-    private readonly HttpClient _client;
+    private readonly Mock<IBeerService> mockedService;
+    private readonly HttpClient client;
 
     [Fact]
     public async Task Should_get_beers()
     {
         List<BeerEntity> beers =
         [
-            new() { Id = 0815, Details = new BeerDetails { Brand = "Nestle", Name = "Wasser", Strength = 0.0 } },
             new()
             {
-                Id = 4711, Details = new BeerDetails { Brand = "Schanzenbräu", Name = "Schanze Rot", Strength = 5.0 }
+                Id = 0815,
+                Details = new BeerDetails
+                {
+                    Brand = "Nestle",
+                    Name = "Wasser",
+                    Strength = 0.0,
+                },
+            },
+            new()
+            {
+                Id = 4711,
+                Details = new BeerDetails
+                {
+                    Brand = "Schanzenbräu",
+                    Name = "Schanze Rot",
+                    Strength = 5.0,
+                },
             },
         ];
-        _mockedService.Setup(x => x.FindAll()).Returns(beers.ToAsyncEnumerable());
+        mockedService.Setup(x => x.FindAll()).Returns(beers.ToAsyncEnumerable());
 
-        var response = await _client.GetAsync("/beers");
+        var response = await client.GetAsync("/beers", TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var actual = await response.Content.ReadAsStringAsync();
+        var actual = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         await VerifyJson(actual);
     }
 
@@ -58,15 +79,17 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
             {
                 Brand = "Schanzenbräu",
                 Name = "Schanze Rot",
-                Strength = 5.0
-            }
+                Strength = 5.0,
+            },
         };
-        _mockedService.Setup(x => x.FindById(beer.Id)).ReturnsAsync(beer);
+        mockedService
+            .Setup(x => x.FindById(beer.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(beer);
 
-        var response = await _client.GetAsync("/beers/4711");
+        var response = await client.GetAsync("/beers/4711", ct);
 
         response.EnsureSuccessStatusCode();
-        var actual = await response.Content.ReadAsStringAsync();
+        var actual = await response.Content.ReadAsStringAsync(ct);
         await VerifyJson(actual);
     }
 
@@ -74,12 +97,14 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
     public async Task Should_return_no_content_for_missing_beer()
     {
         var id = 4711;
-        _mockedService.Setup(x => x.FindById(id)).ReturnsAsync((BeerEntity?)null);
+        mockedService
+            .Setup(x => x.FindById(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BeerEntity?)null);
 
-        var response = await _client.GetAsync($"/beers/{id}");
+        var response = await client.GetAsync($"/beers/{id}", ct);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        var actual = await response.Content.ReadAsStringAsync();
+        var actual = await response.Content.ReadAsStringAsync(ct);
         actual.Should().BeEmpty();
     }
 
@@ -98,18 +123,26 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
         var created = new BeerEntity
         {
             Id = 4711,
-            Details = new BeerDetails { Brand = toCreate.Brand, Name = toCreate.Name, Strength = toCreate.Strength }
+            Details = new BeerDetails
+            {
+                Brand = toCreate.Brand,
+                Name = toCreate.Name,
+                Strength = toCreate.Strength,
+            },
         };
-        _mockedService.Setup(x => x.Create(toCreate)).ReturnsAsync(created);
+        mockedService
+            .Setup(x => x.Create(toCreate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(created);
 
-        var response = await _client.PostAsync(
+        var response = await client.PostAsync(
             "/beers",
-            new StringContent(json, new MediaTypeHeaderValue("application/json"))
+            new StringContent(json, new MediaTypeHeaderValue("application/json")),
+            ct
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         response.Headers.Location.Should().Be($"/beers/{created.Id}");
-        var actual = await response.Content.ReadAsStringAsync();
+        var actual = await response.Content.ReadAsStringAsync(ct);
         await VerifyJson(actual);
     }
 
@@ -118,12 +151,12 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
     {
         var id = 4711;
 
-        var response = await _client.DeleteAsync($"/beers/{id}");
+        var response = await client.DeleteAsync($"/beers/{id}", ct);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        var actual = await response.Content.ReadAsStringAsync();
+        var actual = await response.Content.ReadAsStringAsync(ct);
         actual.Should().BeEmpty();
-        _mockedService.Verify(x => x.Delete(id), Times.Once);
+        mockedService.Verify(x => x.Delete(id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -142,17 +175,25 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
         var created = new BeerEntity
         {
             Id = id,
-            Details = new BeerDetails { Brand = toUpdate.Brand, Name = toUpdate.Name, Strength = toUpdate.Strength }
+            Details = new BeerDetails
+            {
+                Brand = toUpdate.Brand,
+                Name = toUpdate.Name,
+                Strength = toUpdate.Strength,
+            },
         };
-        _mockedService.Setup(x => x.Update(id, toUpdate)).ReturnsAsync(created);
+        mockedService
+            .Setup(x => x.Update(id, toUpdate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(created);
 
-        var response = await _client.PutAsync(
+        var response = await client.PutAsync(
             $"/beers/{id}",
-            new StringContent(json, new MediaTypeHeaderValue("application/json"))
+            new StringContent(json, new MediaTypeHeaderValue("application/json")),
+            ct
         );
 
         response.EnsureSuccessStatusCode();
-        var actual = await response.Content.ReadAsStringAsync();
+        var actual = await response.Content.ReadAsStringAsync(ct);
         await VerifyJson(actual);
     }
 
@@ -168,15 +209,18 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
              "strength": 5.0
              }
             """;
-        _mockedService.Setup(x => x.Update(id, It.IsAny<BeerPayload>())).ReturnsAsync((BeerEntity?)null);
+        mockedService
+            .Setup(x => x.Update(id, It.IsAny<BeerPayload>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BeerEntity?)null);
 
-        var response = await _client.PutAsync(
+        var response = await client.PutAsync(
             $"/beers/{id}",
-            new StringContent(json, new MediaTypeHeaderValue("application/json"))
+            new StringContent(json, new MediaTypeHeaderValue("application/json")),
+            ct
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        var actual = await response.Content.ReadAsStringAsync();
+        var actual = await response.Content.ReadAsStringAsync(ct);
         actual.Should().BeEmpty();
     }
 }

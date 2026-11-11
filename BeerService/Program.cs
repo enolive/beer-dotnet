@@ -2,6 +2,7 @@
 
 using BeerService;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 #endregion
 
@@ -19,6 +20,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
