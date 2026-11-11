@@ -10,27 +10,38 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BeerService.Test;
 
-public class SystemTest
+public class SystemTest(WebApplicationFactory<Program> factory, PostgresFixture postgres)
     : IClassFixture<WebApplicationFactory<Program>>,
-        IClassFixture<PostgresFixture>
+        IClassFixture<PostgresFixture>,
+        IAsyncLifetime
 {
-    private readonly HttpClient client;
+    private readonly CancellationToken ct = TestContext.Current.CancellationToken;
+    private HttpClient client;
+    private AppDbContext dbContext;
 
-    public SystemTest(WebApplicationFactory<Program> factory, PostgresFixture postgres)
+    public ValueTask InitializeAsync()
     {
+        dbContext = postgres.CreateDbContext();
         client = factory
             .WithWebHostBuilder(builder =>
                 builder.ConfigureServices(services =>
                 {
-                    services.AddSingleton(postgres.DbContext);
+                    services.AddSingleton(dbContext);
                 })
             )
             .CreateClient();
+        return ValueTask.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await dbContext.DisposeAsync();
     }
 
     [Fact]
     public async Task Should_create_a_beer()
     {
+        // arrange
         var json = /*language=json*/
             """
              {
@@ -40,18 +51,22 @@ public class SystemTest
              }
             """;
 
+        // act: create a beer
         var createdResponse = await client.PostAsync(
             "/beers",
             new StringContent(json, new MediaTypeHeaderValue("application/json")),
-            TestContext.Current.CancellationToken
+            ct
         );
 
+        // assert: create should succeed
         createdResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var readResponse = await client.GetAsync("/beers", TestContext.Current.CancellationToken);
+        // act: read all beers
+        var readResponse = await client.GetAsync("/beers", ct);
 
+        // assert: read should contain the created beer
         readResponse.EnsureSuccessStatusCode();
-        var beers = await readResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var beers = await readResponse.Content.ReadAsStringAsync(ct);
         await VerifyJson(beers);
     }
 }

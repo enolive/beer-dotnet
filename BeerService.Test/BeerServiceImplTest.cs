@@ -15,14 +15,21 @@ public class BeerServiceImplTest(PostgresFixture postgres)
     : IClassFixture<PostgresFixture>,
         IAsyncLifetime
 {
-    private readonly BeerServiceImpl sut = new(postgres.DbContext);
     private readonly CancellationToken ct = TestContext.Current.CancellationToken;
+    private BeerServiceImpl sut = null!;
+    private AppDbContext dbContext = null!;
 
-    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+    public ValueTask InitializeAsync()
+    {
+        dbContext = postgres.CreateDbContext();
+        sut = new(dbContext);
+        return ValueTask.CompletedTask;
+    }
 
     public async ValueTask DisposeAsync()
     {
-        await postgres.DbContext.Beers.ExecuteDeleteAsync(ct);
+        await dbContext.Beers.ExecuteDeleteAsync(CancellationToken.None);
+        await dbContext.DisposeAsync();
     }
 
     public class Examples(PostgresFixture postgres) : BeerServiceImplTest(postgres)

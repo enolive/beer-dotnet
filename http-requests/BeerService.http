@@ -1,36 +1,36 @@
 @BeerService_HostAddress = http://localhost:5172
 
-###
+### Get all beers
 
 GET {{BeerService_HostAddress}}/beers
 
-###
+### Get single beer
 
 GET {{BeerService_HostAddress}}/beers/2
 
-###
+### Create new beer
 
 POST {{BeerService_HostAddress}}/beers
 Content-Type: application/json
 
 {
-  "name": "Schanze Rot",
+  "name": "Schanze Hell",
   "brand": "Schanzenbräu",
   "strength": 5.0
 }
 
-###
+### Update existing beer
 
 PUT {{BeerService_HostAddress}}/beers/2
 Content-Type: application/json
 
 {
-  "name": "Schanze Rot",
+  "name": "Schanze Kehlengold",
   "brand": "Schanzenbräu",
   "strength": 4.9
 }
 
-###
+### Delete existing beer
 
 DELETE {{BeerService_HostAddress}}/beers/1
 

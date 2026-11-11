@@ -1,10 +1,11 @@
-﻿#region
+#region
 
 using System.Net;
 using System.Net.Http.Headers;
 using AwesomeAssertions;
 using JetBrains.Annotations;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -13,26 +14,29 @@ using Moq;
 namespace BeerService.Test;
 
 [TestSubject(typeof(BeerApi))]
-public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
+public class BeerApiTest : IAsyncLifetime
 {
     private readonly CancellationToken ct = TestContext.Current.CancellationToken;
+    private readonly Mock<IBeerService> mockedService = new();
+    private WebApplication app = null!;
+    private HttpClient client = null!;
 
-    public BeerApiTest(WebApplicationFactory<Program> factory)
+    public async ValueTask InitializeAsync()
     {
-        mockedService = new Mock<IBeerService>();
-        client = factory
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureServices(services =>
-                {
-                    services.AddSingleton(mockedService.Object);
-                });
-            })
-            .CreateClient();
+        var builder = WebApplication.CreateSlimBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton(mockedService.Object);
+        app = builder.Build();
+        app.ConfigureBeerApiEndpoints();
+        await app.StartAsync(ct);
+        client = app.GetTestClient();
     }
 
-    private readonly Mock<IBeerService> mockedService;
-    private readonly HttpClient client;
+    public async ValueTask DisposeAsync()
+    {
+        client.Dispose();
+        await app.DisposeAsync();
+    }
 
     [Fact]
     public async Task Should_get_beers()
@@ -65,7 +69,9 @@ public class BeerApiTest : IClassFixture<WebApplicationFactory<Program>>
         var response = await client.GetAsync("/beers", TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var actual = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var actual = await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken
+        );
         await VerifyJson(actual);
     }
 
