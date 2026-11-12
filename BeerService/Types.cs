@@ -10,12 +10,13 @@ public record BeerPayload(string Name, string Brand, double Strength);
 
 public class BeerEntity
 {
-    [Key] public int Id { get; set; }
+    [Key]
+    public int Id { get; set; }
 
     public required BeerDetails Details { get; set; }
 }
 
-public class BeerDetails
+public record BeerDetails
 {
     public required string Name { get; set; }
     public required string Brand { get; set; }

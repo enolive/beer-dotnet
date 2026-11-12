@@ -3,7 +3,6 @@
 using System.Net;
 using System.Net.Http.Headers;
 using AwesomeAssertions;
-using JetBrains.Annotations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,11 +12,10 @@ using Moq;
 
 namespace BeerService.Test;
 
-[TestSubject(typeof(BeerApi))]
 public class BeerApiTest : IAsyncLifetime
 {
     private readonly CancellationToken ct = TestContext.Current.CancellationToken;
-    private readonly Mock<IBeerService> mockedService = new();
+    private readonly Mock<IBeerRepository> repository = new();
     private WebApplication app = null!;
     private HttpClient client = null!;
 
@@ -25,7 +23,7 @@ public class BeerApiTest : IAsyncLifetime
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.UseTestServer();
-        builder.Services.AddSingleton(mockedService.Object);
+        builder.Services.AddSingleton(repository.Object);
         app = builder.Build();
         app.ConfigureBeerApiEndpoints();
         await app.StartAsync(ct);
@@ -64,7 +62,7 @@ public class BeerApiTest : IAsyncLifetime
                 },
             },
         ];
-        mockedService.Setup(x => x.FindAll()).Returns(beers.ToAsyncEnumerable());
+        repository.Setup(x => x.FindAll()).Returns(beers.ToAsyncEnumerable());
 
         var response = await client.GetAsync("/beers", TestContext.Current.CancellationToken);
 
@@ -88,7 +86,7 @@ public class BeerApiTest : IAsyncLifetime
                 Strength = 5.0,
             },
         };
-        mockedService
+        repository
             .Setup(x => x.FindById(beer.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(beer);
 
@@ -103,7 +101,7 @@ public class BeerApiTest : IAsyncLifetime
     public async Task Should_return_no_content_for_missing_beer()
     {
         var id = 4711;
-        mockedService
+        repository
             .Setup(x => x.FindById(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BeerEntity?)null);
 
@@ -136,7 +134,7 @@ public class BeerApiTest : IAsyncLifetime
                 Strength = toCreate.Strength,
             },
         };
-        mockedService
+        repository
             .Setup(x => x.Create(toCreate, It.IsAny<CancellationToken>()))
             .ReturnsAsync(created);
 
@@ -162,7 +160,7 @@ public class BeerApiTest : IAsyncLifetime
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         var actual = await response.Content.ReadAsStringAsync(ct);
         actual.Should().BeEmpty();
-        mockedService.Verify(x => x.Delete(id, It.IsAny<CancellationToken>()), Times.Once);
+        repository.Verify(x => x.Delete(id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -188,7 +186,7 @@ public class BeerApiTest : IAsyncLifetime
                 Strength = toUpdate.Strength,
             },
         };
-        mockedService
+        repository
             .Setup(x => x.Update(id, toUpdate, It.IsAny<CancellationToken>()))
             .ReturnsAsync(created);
 
@@ -215,7 +213,7 @@ public class BeerApiTest : IAsyncLifetime
              "strength": 5.0
              }
             """;
-        mockedService
+        repository
             .Setup(x => x.Update(id, It.IsAny<BeerPayload>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BeerEntity?)null);
 

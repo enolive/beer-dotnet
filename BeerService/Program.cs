@@ -13,7 +13,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
-builder.Services.AddScoped<IBeerService, BeerServiceImpl>();
+builder.Services.AddScoped<IBeerRepository, BeerRepository>();
 
 var app = builder.Build();
 

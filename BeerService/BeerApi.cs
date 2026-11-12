@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace BeerService;
 
 public static class BeerApi
@@ -5,16 +7,19 @@ public static class BeerApi
     public static void ConfigureBeerApiEndpoints(this WebApplication webApplication)
     {
         webApplication
-            .MapGet("/beers", (IBeerService beerService) => beerService.FindAll())
+            .MapGet("/beers", (IBeerRepository beerService) => beerService.FindAll())
             .WithName("GetAllBeers");
 
         webApplication
             .MapPost(
                 "/beers",
-                async (BeerPayload beer, IBeerService beerService, CancellationToken ct) =>
+                async (BeerPayload beer, IBeerRepository beerService, CancellationToken ct) =>
                 {
                     var created = await beerService.Create(beer, ct);
-                    return Results.Created($"/beers/{created.Id}", created);
+                    return Results.Created(
+                        $"/beers/{created.Id.ToString(CultureInfo.InvariantCulture)}",
+                        created
+                    );
                 }
             )
             .WithName("SaveBeer");
@@ -22,7 +27,7 @@ public static class BeerApi
         webApplication
             .MapDelete(
                 "/beers/{id:int}",
-                async (int id, IBeerService beerService, CancellationToken ct) =>
+                async (int id, IBeerRepository beerService, CancellationToken ct) =>
                 {
                     await beerService.Delete(id, ct);
                     return Results.NoContent();
@@ -33,7 +38,7 @@ public static class BeerApi
         webApplication
             .MapGet(
                 "/beers/{id:int}",
-                async (int id, IBeerService beerService, CancellationToken ct) =>
+                async (int id, IBeerRepository beerService, CancellationToken ct) =>
                     await beerService.FindById(id, ct) switch
                     {
                         null => Results.NoContent(),
@@ -45,7 +50,12 @@ public static class BeerApi
         webApplication
             .MapPut(
                 "/beers/{id:int}",
-                async (int id, BeerPayload beer, IBeerService beerService, CancellationToken ct) =>
+                async (
+                    int id,
+                    BeerPayload beer,
+                    IBeerRepository beerService,
+                    CancellationToken ct
+                ) =>
                     await beerService.Update(id, beer, ct) switch
                     {
                         null => Results.NoContent(),

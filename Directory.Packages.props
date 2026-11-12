@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
+    <PackageVersion Include="DotnetAutomaticInterface" Version="6.0.2" />
     <PackageVersion Include="FsCheck.Xunit.v3" Version="3.6.0" />
     <PackageVersion Include="JetBrains.Annotations" Version="2026.2.0" />
     <GlobalPackageReference Include="Meziantou.Analyzer" Version="3.0.325" />

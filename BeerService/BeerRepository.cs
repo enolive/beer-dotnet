@@ -1,21 +1,14 @@
 #region
 
+using DotnetAutomaticInterface;
 using Microsoft.EntityFrameworkCore;
 
 #endregion
 
 namespace BeerService;
 
-public interface IBeerService
-{
-    IAsyncEnumerable<BeerEntity> FindAll();
-    Task<BeerEntity> Create(BeerPayload beer, CancellationToken ct);
-    Task Delete(int id, CancellationToken ct);
-    Task<BeerEntity?> FindById(int id, CancellationToken ct);
-    Task<BeerEntity?> Update(int id, BeerPayload toUpdate, CancellationToken ct);
-}
-
-public class BeerServiceImpl(AppDbContext dbContext) : IBeerService
+[GenerateAutomaticInterface]
+public class BeerRepository(AppDbContext dbContext) : IBeerRepository
 {
     public IAsyncEnumerable<BeerEntity> FindAll() => dbContext.Beers.AsAsyncEnumerable();
 

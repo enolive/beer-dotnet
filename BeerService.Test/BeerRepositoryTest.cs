@@ -11,13 +11,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BeerService.Test;
 
-public class BeerServiceImplTest(PostgresFixture postgres)
+public class BeerRepositoryTest(PostgresFixture postgres)
     : IClassFixture<PostgresFixture>,
         IAsyncLifetime
 {
     private readonly CancellationToken ct = TestContext.Current.CancellationToken;
-    private BeerServiceImpl sut = null!;
-    private AppDbContext dbContext = null!;
+    private BeerRepository sut;
+    private AppDbContext dbContext;
 
     public ValueTask InitializeAsync()
     {
@@ -32,7 +32,7 @@ public class BeerServiceImplTest(PostgresFixture postgres)
         await dbContext.DisposeAsync();
     }
 
-    public class Examples(PostgresFixture postgres) : BeerServiceImplTest(postgres)
+    public class Examples(PostgresFixture postgres) : BeerRepositoryTest(postgres)
     {
         [Fact]
         public async Task Should_create_beer()
@@ -50,7 +50,7 @@ public class BeerServiceImplTest(PostgresFixture postgres)
     }
 
     [Properties(MaxTest = 10, Arbitrary = [typeof(Arbs)])]
-    public class Properties(PostgresFixture postgres) : BeerServiceImplTest(postgres)
+    public class Properties(PostgresFixture postgres) : BeerRepositoryTest(postgres)
     {
         [Property]
         public async Task Should_create_beer(BeerPayload createBeer)
@@ -104,15 +104,15 @@ public class BeerServiceImplTest(PostgresFixture postgres)
         private static readonly IArbMap Map = ArbMap.Default;
 
         [UsedImplicitly]
-        public static Arbitrary<BeerPayload> ValidPayload() =>
+        public static Arbitrary<BeerPayload> ValidBeerPayload() =>
             (
-                from name in String()
-                from brand in String()
+                from name in ValidString()
+                from brand in ValidString()
                 from strength in Map.GeneratorFor<NormalFloat>()
                 select new BeerPayload(name, brand, strength.Get)
             ).ToArbitrary();
 
-        private static Gen<string> String() =>
+        private static Gen<string> ValidString() =>
             ArbMap.Default.GeneratorFor<string>().Where(s => s is not null && !s.Contains('\0'));
     }
 }
